@@ -2,129 +2,129 @@
 <%@ page import="java.util.List" %>
 <%@ page import="com.lifeflow.model.User" %>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Manage Users - LifeFlow</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users - Admin Console</title>
     <link rel="stylesheet" href="<%= request.getContextPath() %>/css/style.css">
 </head>
-<body>
-<div class="navbar">
-    <div class="brand"><strong>LifeFlow Admin</strong></div>
-    <div>
+<body style="background: var(--surface-base);">
+<%
+    User adminUser = (User) session.getAttribute("loggedInUser");
+    if (adminUser == null || !"ADMIN".equalsIgnoreCase(adminUser.getRole())) {
+        response.sendRedirect(request.getContextPath() + "/login");
+        return;
+    }
+%>
+
+<nav class="v3-navbar admin-mode">
+    <a class="v3-nav-brand" href="<%= request.getContextPath() %>/admin-dashboard">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 3C16 3 6 12.5 6 19a10 10 0 0 0 20 0C26 12.5 16 3 16 3Z" fill="white"/>
+            <path d="M16 10C16 10 10 16.5 10 20a6 6 0 0 0 12 0C22 16.5 16 10 16 10Z" fill="rgba(255,255,255,0.3)"/>
+        </svg>
+        Command Center
+    </a>
+    <div class="v3-nav-links" id="navbarLinks">
+        <a href="<%= request.getContextPath() %>/home">Platform Home</a>
         <a href="<%= request.getContextPath() %>/admin-dashboard">Dashboard</a>
-        <a href="<%= request.getContextPath() %>/manage-users">Users</a>
+        <a href="<%= request.getContextPath() %>/manage-users" class="active">Users</a>
         <a href="<%= request.getContextPath() %>/manage-donors">Donors</a>
-        <a href="<%= request.getContextPath() %>/manage-blood-requests">Blood Requests</a>
+        <a href="<%= request.getContextPath() %>/manage-blood-requests">Requests</a>
         <a href="<%= request.getContextPath() %>/manage-appointments">Appointments</a>
         <a href="<%= request.getContextPath() %>/view-messages">Messages</a>
-        <a href="<%= request.getContextPath() %>/logout">Logout</a>
+        <a href="<%= request.getContextPath() %>/logout" class="v3-nav-logout" style="background: rgba(255,255,255,0.1); color: white;">Logout</a>
     </div>
+</nav>
+
+<div class="v3-admin-header reveal" style="padding: 3rem 5%; padding-bottom: 5rem;">
+    <h1 class="v3-admin-title">User Management</h1>
+    <p class="v3-admin-subtitle">Oversight of all registered accounts, roles, and access states.</p>
 </div>
 
-<div class="container">
-    <h1 class="page-title">Manage Users</h1>
-    <p class="page-subtitle">Search, review, and manage registered user accounts</p>
+<main class="v3-data-suite" style="margin-top: -4rem;">
+    <div style="max-width: 1400px; margin: 0 auto; position: relative; z-index: 10;">
+        
+        <%
+            String errorMessage   = (String) request.getAttribute("errorMessage");
+            String successMessage = (String) request.getAttribute("successMessage");
+            if (errorMessage != null) {
+        %>
+            <div class="v3-message error"><%= errorMessage %></div>
+        <% } %>
+        <% if (successMessage != null) { %>
+            <div class="v3-message success"><%= successMessage %></div>
+        <% } %>
 
-    <div class="top-links">
-        <a href="<%= request.getContextPath() %>/admin-dashboard">Back to Dashboard</a>
+        <div class="v3-table-wrapper reveal">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Full Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th style="text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <%
+                        List<User> userList = (List<User>) request.getAttribute("users");
+                        if (userList != null && !userList.isEmpty()) {
+                            for (User u : userList) {
+                    %>
+                        <tr>
+                            <td><span style="font-size:0.85rem; color:var(--text-muted);"><%= u.getUserId() %></span></td>
+                            <td><strong><%= u.getFullName() %></strong></td>
+                            <td><%= u.getEmail() %></td>
+                            <td><%= u.getPhone() != null ? u.getPhone() : "-" %></td>
+                            <td>
+                                <% if ("ADMIN".equalsIgnoreCase(u.getRole())) { %>
+                                    <span class="badge badge-admin">Admin</span>
+                                <% } else { %>
+                                    <span class="badge badge-donor">Donor</span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if (u.isAccountLocked()) { %>
+                                    <span class="badge badge-critical">Locked</span>
+                                <% } else { %>
+                                    <span class="badge badge-open">Active</span>
+                                <% } %>
+                            </td>
+                            <td style="text-align:right;">
+                                <% if (adminUser.getUserId() != u.getUserId()) { %>
+                                    <form action="<%= request.getContextPath() %>/manage-users" method="post" style="display:inline;" onsubmit="return confirm('Delete this user? This action cannot be undone.');">
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="userId" value="<%= u.getUserId() %>">
+                                        <button type="submit" class="btn btn-danger" style="padding: 6px 12px; font-size: 0.8rem;">Delete</button>
+                                    </form>
+                                <% } else { %>
+                                    <span style="color:var(--text-muted); font-size:0.85rem; font-weight:600;">Current User</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <%
+                            }
+                        } else {
+                    %>
+                        <tr><td colspan="7" style="text-align:center; padding:3rem;">No users found.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
     </div>
+</main>
 
-    <%
-        String successMessage = (String) request.getAttribute("successMessage");
-        String keyword = (String) request.getAttribute("keyword");
-        String role = (String) request.getAttribute("role");
-        List<User> users = (List<User>) request.getAttribute("users");
-
-        if (successMessage != null) {
-    %>
-        <div class="message success"><%= successMessage %></div>
-    <%
-        }
-    %>
-
-    <div class="search-box">
-        <h2 class="section-title">Search Users</h2>
-        <form action="<%= request.getContextPath() %>/manage-users" method="get">
-            <div class="search-grid">
-                <div>
-                    <label for="keyword">Keyword</label>
-                    <input type="text" id="keyword" name="keyword"
-                           value="<%= keyword != null ? keyword : "" %>"
-                           placeholder="Name, email, or phone">
-                </div>
-
-                <div>
-                    <label for="role">Role</label>
-                    <select id="role" name="role">
-                        <option value="">All</option>
-                        <option value="admin" <%= "admin".equals(role) ? "selected" : "" %>>Admin</option>
-                        <option value="donor" <%= "donor".equals(role) ? "selected" : "" %>>Donor</option>
-                    </select>
-                </div>
-
-                <div>
-                    <button type="submit" class="search-btn">Search</button>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <div class="section" style="margin-top: 28px;">
-        <h2 class="section-title">User Records</h2>
-        <table>
-            <tr>
-                <th>User ID</th>
-                <th>Full Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Role</th>
-                <th>Failed Attempts</th>
-                <th>Locked</th>
-                <th>Created At</th>
-                <th>Action</th>
-            </tr>
-
-            <%
-                if (users != null && !users.isEmpty()) {
-                    for (User user : users) {
-            %>
-            <tr>
-                <td><%= user.getUserId() %></td>
-                <td><%= user.getFullName() %></td>
-                <td><%= user.getEmail() %></td>
-                <td><%= user.getPhone() %></td>
-                <td class="<%= "admin".equalsIgnoreCase(user.getRole()) ? "role-admin" : "role-donor" %>">
-                    <%= user.getRole() %>
-                </td>
-                <td><%= user.getFailedAttempts() %></td>
-                <td><%= user.isAccountLocked() ? "Yes" : "No" %></td>
-                <td><%= user.getCreatedAt() %></td>
-                <td>
-                    <form action="<%= request.getContextPath() %>/manage-users" method="post" style="margin:0;">
-                        <input type="hidden" name="action" value="delete">
-                        <input type="hidden" name="userId" value="<%= user.getUserId() %>">
-                        <button type="submit" class="delete-btn">Delete</button>
-                    </form>
-                </td>
-            </tr>
-            <%
-                    }
-                } else {
-            %>
-            <tr>
-                <td colspan="9">No users found.</td>
-            </tr>
-            <%
-                }
-            %>
-        </table>
-    </div>
-
-    <div class="footer">
-        &copy; 2026 LifeFlow Admin Panel. All rights reserved.
-    </div>
-</div>
-
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(() => {
+            document.querySelectorAll('.reveal').forEach(el => el.classList.add('active'));
+        }, 50);
+    });
+</script>
 </body>
 </html>
