@@ -3,6 +3,7 @@ package com.lifeflow.controllers;
 import com.lifeflow.model.Donor;
 import com.lifeflow.model.User;
 import com.lifeflow.service.UserService;
+import com.lifeflow.util.PasswordUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -75,7 +76,9 @@ public class RegisterServlet extends HttpServlet {
             return;
         }
 
-        User user = new User(fullName, email, phone, password, "donor");
+        // Hash the password before persisting
+        String hashedPassword = PasswordUtil.hashPassword(password);
+        User user = new User(fullName, email, phone, hashedPassword, "donor");
 
         Donor donor = new Donor();
         donor.setBloodGroup(bloodGroup);

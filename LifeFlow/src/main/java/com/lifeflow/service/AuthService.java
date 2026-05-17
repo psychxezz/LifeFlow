@@ -2,6 +2,7 @@ package com.lifeflow.service;
 
 import com.lifeflow.config.DBConfig;
 import com.lifeflow.model.User;
+import com.lifeflow.util.PasswordUtil;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,23 +12,31 @@ import java.sql.SQLException;
 public class AuthService {
 
     public User loginUser(String email, String password) {
-        String query = "SELECT * FROM users WHERE email = ? AND password = ? AND account_locked = FALSE";
+        // Fetch the user by email only (account must not be locked);
+        // password verification is done in Java using the stored hash.
+        String query = "SELECT * FROM users WHERE email = ? AND account_locked = FALSE";
 
         try (Connection conn = DBConfig.getConnection();
              PreparedStatement ps = conn.prepareStatement(query)) {
 
             ps.setString(1, email);
-            ps.setString(2, password);
 
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
+                String storedPassword = rs.getString("password");
+
+                // Verify the plaintext password against the stored hash
+                if (!PasswordUtil.verifyPassword(password, storedPassword)) {
+                    return null;
+                }
+
                 User user = new User();
                 user.setUserId(rs.getInt("user_id"));
                 user.setFullName(rs.getString("full_name"));
                 user.setEmail(rs.getString("email"));
                 user.setPhone(rs.getString("phone"));
-                user.setPassword(rs.getString("password"));
+                user.setPassword(storedPassword);
                 user.setRole(rs.getString("role"));
                 user.setFailedAttempts(rs.getInt("failed_attempts"));
                 user.setAccountLocked(rs.getBoolean("account_locked"));

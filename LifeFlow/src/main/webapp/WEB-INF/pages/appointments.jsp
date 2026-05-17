@@ -69,15 +69,19 @@
         <% } %>
 
         <div class="v3-toolbar reveal" style="animation-delay: 0.1s;">
-            <form action="<%= request.getContextPath() %>/appointments" method="post" style="display:flex; gap:1rem; width:100%; align-items:flex-end;">
+            <form action="<%= request.getContextPath() %>/appointments" method="post" style="display:flex; gap:1rem; width:100%; align-items:flex-end; flex-wrap:wrap;">
                 <input type="hidden" name="action" value="book">
-                <div class="v3-form-group" style="margin:0; flex:1;">
+                <div class="v3-form-group" style="margin:0; flex:1; min-width:150px;">
                     <label for="appointmentDate">Date</label>
                     <input type="date" id="appointmentDate" name="appointmentDate" required>
                 </div>
-                <div class="v3-form-group" style="margin:0; flex:1;">
-                    <label for="hospitalName">Hospital / Clinic</label>
-                    <input type="text" id="hospitalName" name="hospitalName" placeholder="Where will you donate?" required>
+                <div class="v3-form-group" style="margin:0; flex:1; min-width:130px;">
+                    <label for="appointmentTime">Time</label>
+                    <input type="time" id="appointmentTime" name="appointmentTime" required>
+                </div>
+                <div class="v3-form-group" style="margin:0; flex:2; min-width:200px;">
+                    <label for="location">Hospital / Clinic</label>
+                    <input type="text" id="location" name="location" placeholder="Where will you donate?" required>
                 </div>
                 <button type="submit" class="btn btn-primary" style="height: 48px; padding: 0 32px;">Book Session</button>
             </form>

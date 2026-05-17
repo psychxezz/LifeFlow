@@ -2,6 +2,7 @@ package com.lifeflow.controllers;
 
 import com.lifeflow.model.User;
 import com.lifeflow.service.UserService;
+import com.lifeflow.util.PasswordUtil;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -85,7 +86,9 @@ public class ForgotPasswordServlet extends HttpServlet {
             return;
         }
 
-        boolean updated = userService.updatePasswordByEmail(email, newPassword);
+        // Hash the new password before persisting
+        String hashedPassword = PasswordUtil.hashPassword(newPassword);
+        boolean updated = userService.updatePasswordByEmail(email, hashedPassword);
 
         if (updated) {
             response.sendRedirect(request.getContextPath() + "/login?success=reset");
